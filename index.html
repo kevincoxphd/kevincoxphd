@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kevin Cox Ph.D</title>
+    <style>
+        @font-face {
+            font-family: 'DM Serif Text';
+            src: url('./media/fonts/DMSerifText-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'DM Serif Text';
+            src: url('./media/fonts/DMSerifText-Italic.ttf') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 1.5rem;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        body.boot-loading {
+            overflow: hidden;
+            height: 100vh;
+        }
+        html.boot-loading {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Boot sequence styles */
+        .boot-sequence {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .boot-image-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Mobile boot layout - only 3 images */
+        @media (max-width: 768px) {
+            .boot-image-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(3, 1fr);
+                gap: 4px;
+            }
+
+            .boot-image-cell {
+                display: none;
+            }
+
+            .boot-image-cell.mobile-visible {
+                display: block;
+            }
+
+            /* Mobile specific image positioning */
+            #bootImage5 {
+                grid-row: 2;
+                grid-column: 1;
+            }
+
+            #bootImage8 {
+                grid-row: 1;
+                grid-column: 1;
+            }
+
+            #bootImage3 {
+                grid-row: 3;
+                grid-column: 1;
+            }
+        }
+
+        .boot-image-grid.active {
+            opacity: 1;
+        }
+
+        .boot-image-cell {
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            filter: grayscale(100%);
+        }
+
+        .boot-image-cell.active {
+            opacity: 0.5;
+        }
+
+        .boot-text {
+            font-family: 'DM Serif Text', serif;
+            font-size: 8.0rem;
+            color: #CCCCCC;
+            text-align: center;
+            z-index: 10;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 1s ease-in-out, font-size 1s ease-in-out;
+        }
+
+        .boot-text.moved-up {
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+        }
+
+
+        .boot-sequence.hidden {
+            height: 80px;
+            transition: height 1s ease-in-out;
+        }
+
+
+        /* Main website content */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            background: #000000;
+        }
+
+        .navbar {
+            background: #1a1a1a;
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1200; /* above boot-sequence (1000) */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* removed .nav-content wrapper */
+
+        
+
+        /* Social icons on top of boot animation */
+        .boot-social {
+            position: absolute;
+            right: 2.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 1500; /* above boot sequence */
+        }
+        .boot-social.visible { opacity: 1; }
+        .boot-social .nav-icon {
+            width: 36px;
+            height: 36px;
+            filter: brightness(0) invert(1);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .boot-social a:hover .nav-icon {
+            transform: scale(1.1);
+            opacity: 0.85;
+        }
+
+        
+
+
+        .hero-section {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            color: #FFFFFF;
+            position: relative;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 2.3s ease-in-out;
+            filter: grayscale(100%);
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+        }
+
+        .hero-slide:nth-child(1) { background-image: url('./media/cover2.jpeg'); }
+        .hero-slide:nth-child(2) { background-image: url('./media/cover4.jpeg'); }
+        .hero-slide:nth-child(3) { background-image: url('./media/cover3.jpeg'); }
+        .hero-slide:nth-child(4) { background-image: url('./media/cover5.jpeg'); }
+        .hero-slide:nth-child(5) { background-image: url('./media/cover6.jpeg'); }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-section h1 {
+            font-size: 3.6rem;
+            margin-bottom: 1rem;
+            font-family: 'DM Serif Text', serif;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            font-weight: normal;
+        }
+
+        .hero-section p {
+            font-size: 1.8rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #FFFFFF;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .social-link {
+            display: inline-block;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            filter: brightness(0) invert(1);
+            transition: filter 0.3s ease;
+        }
+
+        .social-link:hover .social-icon {
+            filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+
+        /* Hard clamp any horizontal overflow caused by full-bleed sections */
+        html, body, .main-content {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
+        /* Generic fade-in-on-scroll utility */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Footer styles */
+        .site-footer {
+            background: #2a2a2a;
+            padding: 2rem 2rem;
+            margin-top: 0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-email p {
+            color: #CCCCCC;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .footer-email a {
+            color: #FFFFFF;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-email a:hover {
+            color: #CCCCCC;
+        }
+
+        .footer-copyright p {
+            color: #CCCCCC;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .footer-social-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .footer-social-link {
+            display: inline-block;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .footer-social-link:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        .footer-social-icon {
+            width: 32px;
+            height: 32px;
+            filter: brightness(0) invert(1);
+            transition: filter 0.3s ease;
+        }
+
+        .footer-social-link:hover .footer-social-icon {
+            filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+        }
+
+        .content-section {
+            padding: 4rem 2rem;
+            max-width: 1800px;
+            margin: 0 auto;
+            color: #FFFFFF;
+            position: relative;
+        }
+
+        .content-section:not(:first-child)::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1400px;
+            height: 1.5px;
+            background: #FFFFFF;
+            opacity: 0.3;
+        }
+
+        #news {
+            background: #000000;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            max-width: none; /* override .content-section constraint */
+        }
+
+        #news::before {
+            width: 1400px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            height: 1.5px !important;
+        }
+
+        #news .content-grid {
+            max-width: 1400px;
+            margin: 2rem auto 0;
+            justify-items: center; /* center cards within grid */
+        }
+
+        #news .content-card {
+            text-align: center;
+        }
+        /* Make News images larger and black & white */
+        #news .content-card img {
+            height: 400px;
+            object-fit: contain;
+            filter: grayscale(100%);
+            border-radius: 0;
+            background: #000000;
+            width: 100%;
+        }
+        /* Slightly smaller News titles */
+        #news .content-card h3 {
+            font-size: 1.75rem;
+        }
+
+        /* News titles styled as links like Publications & Media */
+        #news .content-card h3 a {
+            color: #66AAFF;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        #news .content-card h3 a:hover {
+            color: #99C5FF;
+            text-decoration: underline;
+        }
+        #news .content-card h3 a::after {
+            content: "\2197";
+            margin-left: 8px;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+        #news .content-card a img {
+            transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+        }
+        #news .content-card a:hover img {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+            opacity: 0.95;
+        }
+
+        .content-section h2 {
+            font-family: 'DM Serif Text', serif;
+            font-size: 3.75rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: normal;
+        }
+
+        .content-section h2.underlined {
+            text-decoration: none;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        /* Make News and Publications cards use silver borders like the dividers */
+        #news .content-card,
+        #books .content-card {
+            border: 2px solid #CCCCCC;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .content-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Publications & Media images should be black and white */
+        #books .content-card img {
+            filter: grayscale(100%);
+            border-radius: 0;
+            height: 400px;
+            object-fit: contain;
+            background: #000000;
+        }
+
+        /* Linked titles inside Publications & Media should look like links */
+        #books .content-card h3 a {
+            color: #66AAFF;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        #books .content-card h3 a:hover {
+            color: #99C5FF;
+            text-decoration: underline;
+        }
+        #books .content-card h3 a::after {
+            content: "\2197"; /* ↗ */
+            margin-left: 8px;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        /* Subtle image hover to indicate clickability */
+        #books .content-card a img {
+            transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+        }
+        #books .content-card a:hover img {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+            opacity: 0.95;
+        }
+
+        .content-card h3 {
+            font-family: 'DM Serif Text', serif;
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+            color: #FFFFFF;
+            font-weight: normal;
+        }
+
+        .content-card p {
+            color: #FFFFFF;
+            font-size: 1.5rem;
+        }
+
+        /* Consulting call-to-action block */
+        .cta-section {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2.5rem;
+            border: 2px solid #CCCCCC;
+            border-radius: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .cta-section h2 {
+            margin-bottom: 1rem;
+        }
+        .cta-tagline {
+            font-family: 'DM Serif Text', serif;
+            font-style: italic;
+            font-size: 7.4rem;
+            color: #FFFFFF;
+            margin-bottom: 1.5rem;
+        }
+        .cta-tagline strong { font-weight: 900; text-decoration: underline; text-underline-offset: 6px; }
+        .cta-reach {
+            font-size: 1.3rem;
+            color: #FFFFFF;
+            margin-bottom: 1rem;
+        }
+        .cta-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1.25rem;
+        }
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid #CCCCCC;
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+        }
+        .cta-button:hover {
+            background: #FFFFFF;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+        .cta-icon {
+            width: 22px;
+            height: 22px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* About section styles */
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        .about-image {
+            flex: 0 0 600px;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 0px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            filter: grayscale(100%);
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #CCCCCC;
+            margin-bottom: 1.2rem;
+        }
+
+        .about-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        
+
+        /* QR Code Button and Modal */
+        .qr-button {
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 60px !important;
+            height: 60px !important;
+            background: #111111 !important;
+            border: 1px solid #444444 !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 9999 !important;
+            transition: opacity 0.3s ease !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            top: auto !important;
+            left: auto !important;
+            transform: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .qr-button:hover {
+            background: #1a1a1a !important;
+            transform: scale(1.1) !important;
+        }
+
+        .qr-button::before {
+            content: "";
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #CCCCCC;
+            background-image:
+                linear-gradient(90deg, transparent 0%, transparent 45%, #111111 45%, #111111 55%, transparent 55%, transparent 100%),
+                linear-gradient(0deg, transparent 0%, transparent 45%, #111111 45%, #111111 55%, transparent 55%, transparent 100%);
+            background-size: 24px 24px;
+        }
+
+        .qr-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+        }
+
+        .qr-modal.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .qr-modal-content {
+            background: #000000;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            max-width: 300px;
+            width: 90%;
+            border: 1px solid #000000;
+            box-shadow: 0 20px 60px rgb(0, 0, 0);
+            transform: translateY(12px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+        }
+
+        .qr-modal.active .qr-modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .qr-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #DDDDDD;
+            font-weight: bold;
+        }
+
+        .qr-close:hover {
+            color: #FFFFFF;
+        }
+
+        .qr-modal img {
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .qr-modal p {
+            color: #DDDDDD;
+            font-family: 'DM Serif Text', serif;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2rem;
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+
+            html {
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+
+            * {
+                max-width: 100vw !important;
+            }
+
+            .hero-section {
+                min-height: 100vh !important;
+                height: auto !important;
+                padding: 6rem 1rem 4rem !important;
+                margin-top: 0 !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+            }
+
+            .hero-slide {
+                background-size: cover !important;
+                background-position: center !important;
+            }
+
+            /* Use mobile-optimized hero images */
+            .hero-slide:nth-child(1) { background-image: url('./media/covermobile5.jpeg') !important; }
+            .hero-slide:nth-child(2) { background-image: url('./media/covermobile4.jpeg') !important; }
+            .hero-slide:nth-child(3) { background-image: url('./media/covermobile3.jpeg') !important; }
+            .hero-slide:nth-child(4) { background-image: url('./media/covermobile2.jpeg') !important; }
+            .hero-slide:nth-child(5) { background-image: url('./media/covermobile1.jpeg') !important; }
+
+            /* Hide boot social links on mobile */
+            .boot-social {
+                display: none !important;
+            }
+
+            .main-content {
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+            }
+
+            .content-section {
+                width: 100% !important;
+                max-width: 100vw !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            /* Keep divider lines equal on mobile */
+            .content-section:not(:first-child)::before {
+                width: 92% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                height: 1.5px !important;
+            }
+
+            /* Center Publications & Media cards on mobile */
+            #books .content-card {
+                text-align: center !important;
+            }
+            #books .content-card img {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+
+            #news {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                left: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            .hero-section h1 {
+                font-size: 1.2rem;
+            }
+            
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+
+            
+            
+            
+
+            /* Make consulting tagline half-size on mobile */
+            .cta-tagline {
+                font-size: 3.7rem !important; /* half of 7.4rem */
+            }
+
+            .content-section h2 {
+                font-size: 2.8rem;
+                font-weight: normal;
+                color: #FFFFFF;
+            }
+
+            .content-card h3 {
+                font-size: 1.7rem;
+                font-weight: normal;
+                color: #FFFFFF;
+            }
+            /* Smaller News titles on mobile */
+            #news .content-card h3 {
+                font-size: 1.3rem;
+            }
+
+            .about-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+            }
+
+            .about-image {
+                flex: none;
+                max-width: 350px;
+            }
+
+            .about-text p {
+                font-size: 1rem;
+            }
+
+            .social-links {
+                gap: 1.5rem;
+                margin-top: 1.5rem;
+            }
+
+            .social-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            /* Footer mobile adjustments */
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .footer-left {
+                align-items: center;
+            }
+
+            .footer-email p {
+                font-size: 1rem;
+            }
+
+            .footer-copyright p {
+                font-size: 0.9rem;
+            }
+
+            .footer-social-links {
+                gap: 1.2rem;
+            }
+
+            .footer-social-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            /* Mobile boot text adjustments */
+            .boot-text {
+                font-size: 2.5rem;
+                padding: 0 1rem;
+            }
+
+            .boot-text.moved-up {
+                font-size: 1.2rem;
+            }
+
+            /* QR button mobile adjustments */
+            .qr-button {
+                position: fixed !important;
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+                right: calc(env(safe-area-inset-right, 0px) + 16px) !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                z-index: 9999 !important;
+                top: auto !important;
+                left: auto !important;
+                transform: none !important;
+            }
+
+            /* remove stacked layout; mobile behaves like desktop slideshow */
+        }
+
+        /* Desktop: enlarge QR modal to ~2x size */
+        @media (min-width: 1025px) {
+            .qr-modal-content {
+                max-width: 600px;
+            }
+            .qr-modal img {
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot sequence -->
+    <div class="boot-sequence" id="bootSequence">
+        <div class="boot-image-grid" id="bootImageGrid">
+            <div class="boot-image-cell" id="bootImage1" style="background-image: url('./media/boot5.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage2" style="background-image: url('./media/boot2.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage3" style="background-image: url('./media/boot3.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage4" style="background-image: url('./media/boot4.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage5" style="background-image: url('./media/boot1.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage6" style="background-image: url('./media/boot6.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage7" style="background-image: url('./media/boot7.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage8" style="background-image: url('./media/boot8.jpeg');"></div>
+            <div class="boot-image-cell" id="bootImage9" style="background-image: url('./media/boot9.jpeg');"></div>
+        </div>
+        <div class="boot-social" id="bootSocial" aria-label="Social links">
+            <a href="https://www.linkedin.com/in/kevin-cox-7903102a/" target="_blank" rel="noopener noreferrer">
+                <img src="./media/logos/linkedin.png" alt="LinkedIn" class="nav-icon">
+            </a>
+            <a href="https://www.instagram.com/fauadamscenter/?hl=en" target="_blank" rel="noopener noreferrer">
+                <img src="./media/logos/instagram.webp" alt="Instagram" class="nav-icon">
+            </a>
+            <a href="mailto:kcox24@fau.edu">
+                <img src="./media/logos/email.webp" alt="Email" class="nav-icon">
+            </a>
+        </div>
+        <div class="boot-text" id="bootText">
+            <span id="typedText"></span>
+        </div>
+    </div>
+
+    <!-- Main website content -->
+    <div class="main-content">
+        <nav class="navbar" id="navbar"></nav>
+
+        <section class="hero-section" id="home">
+            <div class="hero-slideshow">
+                <div class="hero-slide active"></div>
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+            </div>
+            <div class="hero-content">
+                <h1>Florida's Entrepreneurship Expert</h1>
+                <div class="social-links">
+                    <a href="https://www.linkedin.com/in/kevin-cox-7903102a/" target="_blank" class="social-link">
+                        <img src="./media/logos/linkedin.png" alt="LinkedIn" class="social-icon">
+                    </a>
+                    <a href="https://www.instagram.com/fauadamscenter/?hl=en" target="_blank" class="social-link">
+                        <img src="./media/logos/instagram.webp" alt="Instagram" class="social-icon">
+                    </a>
+                    <a href="mailto:kcox24@fau.edu" class="social-link">
+                        <img src="./media/logos/email.webp" alt="Email" class="social-icon">
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="about">
+            <h2 class="underlined">About Kevin</h2>
+            <div class="about-content">
+                <div class="about-image">
+                    <img src="./media/headshot.jpeg" alt="Dr. Kevin Cox">
+                </div>
+                <div class="about-text">
+                    <p>Kevin Cox, Ph.D. serves as Director for The Runway Accelerator and Adams Center for Entrepreneurship at FAU, Senior Instructor of Entrepreneurship, and Lead Instructor for FAU's Tech Runway accelerator. He completed his Ph.D. in Entrepreneurship from FAU's College of Business and his Master of Science in Entrepreneurship from the University of Florida.</p>
+                    
+                    <p>Dr. Cox has taught, mentored, and worked with more than 1000 startups, providing expert advice and consultation supporting their survival, growth, and performance. He has published two entrepreneurship training books: <em>The New Venture Launchpad 2.0</em> and <em>The Fine Art of New Venture Funding</em>, along with more than 20 articles in refereed journal outlets.</p>
+                    
+                    <p>His work has been featured in high-quality outlets including Journal of Business Research, Entrepreneurship Education and Pedagogy, Journal of Social Entrepreneurship, and International Journal of Entrepreneurial Behavior & Research. Dr. Cox was recently named the State of Florida Entrepreneurship Educator of the Year for 2025, South Florida Business Journal 40 under 40 Business Leaders, and awarded the 2025 Entrepreneurship Practice Award by the Academy of Management.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="consulting">
+            <div class="cta-section">
+                <h2 class="underlined">Need Consulting?</h2>
+                <div class="cta-tagline">Over <strong>1000</strong> Businesses Served</div>
+                <div class="cta-reach">Reach Out:</div>
+                <div class="cta-actions">
+                    <a class="cta-button" href="https://www.linkedin.com/in/kevin-cox-7903102a/" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/logos/linkedin.png" alt="LinkedIn" class="cta-icon"> LinkedIn
+                    </a>
+                    <a class="cta-button" href="mailto:kcox24@fau.edu">
+                        <img src="./media/logos/email.webp" alt="Email" class="cta-icon"> Email
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="news">
+            <h2 class="underlined">News</h2>
+            <div class="content-grid">
+                <div class="content-card">
+                    <a href="https://www.fau.edu/newsdesk/articles/entrepreneur-bootcamp-fau-academy-of-management.php" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/news/award1.png" alt="Academy of Management Entrepreneurship Practice Award 2025">
+                    </a>
+                    <h3><a href="https://www.fau.edu/newsdesk/articles/entrepreneur-bootcamp-fau-academy-of-management.php" target="_blank" rel="noopener noreferrer">Academy of Management Entrepreneurship Practice Award 2025</a></h3>
+                </div>
+                <div class="content-card">
+                    <a href="https://www.bizjournals.com/southflorida/c/sfbj-2025-40-under-40-honorees/36128/kevin-cox.html" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/news/award2.jpg" alt="South Florida Business Journal 40 under 40 Business Leaders Award">
+                    </a>
+                    <h3><a href="https://www.bizjournals.com/southflorida/c/sfbj-2025-40-under-40-honorees/36128/kevin-cox.html" target="_blank" rel="noopener noreferrer">South Florida Business Journal 40 under 40 Business Leaders Award</a></h3>
+                </div>
+                <div class="content-card">
+                    <a href="https://business.fau.edu/newsroom/press-releases/2025/college-of-business-tallahassee-awards.php" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/news/award3.jpeg" alt="2025 State of Florida Entrepreneurship Educator of the Year Award">
+                    </a>
+                    <h3><a href="https://business.fau.edu/newsroom/press-releases/2025/college-of-business-tallahassee-awards.php" target="_blank" rel="noopener noreferrer">2025 State of Florida Entrepreneurship Educator of the Year Award</a></h3>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="books">
+            <h2 class="underlined">Publications and Media</h2>
+            <div class="content-grid">
+                <div class="content-card">
+                    <a href="https://www.amazon.com/New-Venture-Launchpad-Kevin-Cox/dp/1792466641" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/publications/book.jpg" alt="Books by Kevin Cox">
+                    </a>
+                    <h3><a href="https://www.amazon.com/New-Venture-Launchpad-Kevin-Cox/dp/1792466641" target="_blank" rel="noopener noreferrer">Books</a></h3>
+                    <p>Explore Kevin Cox’s books, including New Venture Launchpad—practical, step-by-step guidance for aspiring and emerging entrepreneurs.</p>
+                </div>
+                <div class="content-card">
+                    <a href="https://www.shrimptankpodcast.com/" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/publications/shrimptank.jpeg" alt="The Shrimp Tank Podcast">
+                    </a>
+                    <h3><a href="https://www.shrimptankpodcast.com/" target="_blank" rel="noopener noreferrer">The Shrimp Tank Podcast</a></h3>
+                    <p>A podcast for practical entrepreneurs to learn from successful businesses.</p>
+                </div>
+                <div class="content-card">
+                    <a href="https://scholar.google.com/citations?hl=en&view_op=list_works&gmla=AH8HC4zHYboAczVKy6vyps2kD0m9LHawEcsC3qMoKuIHkr-AUN2eG6JQfmCq0rQZsIqV-1Z33x_xncPBaxqK_Q&user=Cxl6h5cAAAAJ" target="_blank" rel="noopener noreferrer">
+                        <img src="./media/publications/papers.png" alt="Academic Publications">
+                    </a>
+                    <h3><a href="https://scholar.google.com/citations?hl=en&view_op=list_works&gmla=AH8HC4zHYboAczVKy6vyps2kD0m9LHawEcsC3qMoKuIHkr-AUN2eG6JQfmCq0rQZsIqV-1Z33x_xncPBaxqK_Q&user=Cxl6h5cAAAAJ" target="_blank" rel="noopener noreferrer">Academic Publications</a></h3>
+                    <p>Entrepreneurship research papers and scholarly work covering startups, venture creation, and entrepreneurial ecosystems.</p>
+                </div>
+            </div>
+        </section>
+
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-email">
+                    <p>Contact: <a href="mailto:kcox24@fau.edu">kcox24@fau.edu</a></p>
+                </div>
+                <div class="footer-copyright">
+                    <p>Copyright © Kevin Cox <span id="currentYear"></span></p>
+                </div>
+            </div>
+            <div class="footer-social-links">
+                <a href="https://www.linkedin.com/in/kevin-cox-7903102a/" target="_blank" class="footer-social-link">
+                    <img src="./media/logos/linkedin.png" alt="LinkedIn" class="footer-social-icon">
+                </a>
+                <a href="https://www.instagram.com/fauadamscenter/?hl=en" target="_blank" class="footer-social-link">
+                    <img src="./media/logos/instagram.webp" alt="Instagram" class="footer-social-icon">
+                </a>
+                <a href="mailto:kcox24@fau.edu" class="footer-social-link">
+                    <img src="./media/logos/email.webp" alt="Email" class="footer-social-icon">
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QR Code Button and Modal -->
+    <div class="qr-button" id="qrButton"></div>
+    
+    <div class="qr-modal" id="qrModal">
+        <div class="qr-modal-content">
+            <span class="qr-close" id="qrClose">&times;</span>
+            <img src="./media/qr3.png" alt="QR Code">
+            <p>Scan this to visit kevincox.phd</p>
+        </div>
+    </div>
+
+    <script>
+        // Boot sequence animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Always start at top and prevent browser from restoring scroll
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
+            // Prevent scrolling during boot sequence
+            document.body.classList.add('boot-loading');
+            document.documentElement.classList.add('boot-loading');
+            
+            const bootSequence = document.getElementById('bootSequence');
+            const bootImageGrid = document.getElementById('bootImageGrid');
+            const bootImageCells = [
+                document.getElementById('bootImage1'),
+                document.getElementById('bootImage2'),
+                document.getElementById('bootImage3'),
+                document.getElementById('bootImage4'),
+                document.getElementById('bootImage5'),
+                document.getElementById('bootImage6'),
+                document.getElementById('bootImage7'),
+                document.getElementById('bootImage8'),
+                document.getElementById('bootImage9')
+            ];
+            const typedText = document.getElementById('typedText');
+            const textToType = "KEVIN COX Ph.D";
+            
+            let currentCellIndex = 0;
+            let currentCharIndex = 0;
+            
+            // Step 1: Start with blue background and show grid
+            bootImageGrid.classList.add('active');
+            
+            // Step 2: Animate cells appearing in random order
+            let cellsToAnimate;
+            
+            // Check if mobile
+            if (window.innerWidth <= 768) {
+                // Mobile: only show 3 specific images
+                const mobileCells = [
+                    document.getElementById('bootImage1'), // center
+                    document.getElementById('bootImage8'), // top
+                    document.getElementById('bootImage3')  // bottom
+                ];
+                
+                // Add mobile-visible class to show only these cells
+                mobileCells.forEach(cell => {
+                    if (cell) {
+                        cell.classList.add('mobile-visible');
+                    }
+                });
+                
+                cellsToAnimate = mobileCells;
+            } else {
+                // Desktop: show all cells in random order
+                cellsToAnimate = [...bootImageCells].sort(() => Math.random() - 0.5);
+            }
+            
+            const cellInterval = setInterval(() => {
+                if (currentCellIndex < cellsToAnimate.length) {
+                    cellsToAnimate[currentCellIndex].classList.add('active');
+                    currentCellIndex++;
+                } else {
+                    clearInterval(cellInterval);
+                }
+            }, 150); // Show each cell every 150ms
+            
+            // Step 3: Start typing animation after grid is complete
+            setTimeout(() => {
+                const typeInterval = setInterval(() => {
+                    if (currentCharIndex < textToType.length) {
+                        typedText.textContent += textToType[currentCharIndex];
+                        currentCharIndex++;
+                    } else {
+                        clearInterval(typeInterval);
+                        
+                        // Step 4: Fade out images after typing is complete
+                        setTimeout(() => {
+                            bootImageGrid.style.opacity = '0';
+                            
+                            // Step 5: Move text up independently and boot sequence up to form navbar
+                            setTimeout(() => {
+                                // Move text up 50% of the way
+                                const bootText = document.getElementById('bootText');
+                                bootText.classList.add('moved-up');
+                                
+                                // Move boot sequence up to form navbar
+                                bootSequence.classList.add('hidden');
+                                
+                                // Copy the text to navbar after animation
+                                setTimeout(() => {
+                                    // No navbar logo duplication needed
+                                    
+                                    // Re-enable scrolling after boot sequence
+                                    document.body.classList.remove('boot-loading');
+                                    document.documentElement.classList.remove('boot-loading');
+                                    
+                                    // Initialize fade-ins
+                                    initFadeIns();
+                                    
+                                    // Reveal boot social links 4s after load
+                                    const bootSocial = document.getElementById('bootSocial');
+                                    if (bootSocial) {
+                                        setTimeout(() => bootSocial.classList.add('visible'), 500);
+                                    }
+                                    // QR button is now always visible
+                                }, 500);
+                            }, 1000);
+                        }, 2000); // Wait 2 seconds after typing completes
+                    }
+                }, 100); // Type each character every 100ms
+            }, 2000); // Start typing after grid animation completes
+        });
+
+        
+
+        // Fade-in on scroll for elements with .fade-in
+        function initFadeIns() {
+            const targets = document.querySelectorAll('.fade-in, .content-card, .content-section h2, .about-content, .cta-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    } else {
+                        entry.target.classList.remove('visible');
+                    }
+                });
+            }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+
+            targets.forEach(el => {
+                el.classList.add('fade-in');
+                observer.observe(el);
+            });
+        }
+
+        
+
+        // QR Code Modal functionality
+        const qrButton = document.getElementById('qrButton');
+        const qrModal = document.getElementById('qrModal');
+        const qrClose = document.getElementById('qrClose');
+
+        qrButton.addEventListener('click', function() {
+            qrModal.classList.add('active');
+        });
+
+        qrClose.addEventListener('click', function() {
+            qrModal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside of it
+        qrModal.addEventListener('click', function(e) {
+            if (e.target === qrModal) {
+                qrModal.classList.remove('active');
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && qrModal.classList.contains('active')) {
+                qrModal.classList.remove('active');
+            }
+        });
+
+        // Set current year in copyright
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentYearElement = document.getElementById('currentYear');
+            if (currentYearElement) {
+                currentYearElement.textContent = new Date().getFullYear();
+            }
+        });
+
+        // Hero slideshow functionality
+        function initHeroSlideshow() {
+            const slides = document.querySelectorAll('.hero-slide');
+            let currentSlide = 0;
+
+            function nextSlide() {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }
+
+            // Start slideshow after boot sequence
+            setTimeout(() => {
+                setInterval(nextSlide, 5000);
+            }, 8000);
+        }
+
+        // Initialize slideshow when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initHeroSlideshow();
+        });
+    </script>
+</body>
+</html>
